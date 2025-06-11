@@ -35,3 +35,40 @@ class SMAOptTechAnalysis:
         optimal_tf_df = pd.DataFrame(train_results)
         return optimal_tf_df.sort_values(by='Return [%]', ascending=False)
 
+class RSIOptTechAnalysis:
+    
+    def __init__(self, Strategy):
+        self.strategy = Strategy
+
+    def rsi_params_n_tf_optimization(self, set_type, data, n, oversold, overbought):
+        bt = Backtest(data, self.strategy, cash=10_000_000, commission=0.002)
+
+        stats, heatmap = bt.optimize(
+            n=n,
+            oversold=oversold,
+            overbought=overbought,
+            constraint=lambda p: p.oversold < p.overbought,
+            maximize='Return [%]',
+            return_heatmap=True
+        )
+
+        best_params = heatmap.sort_values(ascending=False)
+
+        best_results = {
+            'interval': set_type,
+            'n': best_params.index[0][0],
+            'oversold': best_params.index[0][1],
+            'overbought': best_params.index[0][2],
+            'Return [%]': best_params.iloc[0],
+            'No. of Trades': stats['# Trades']
+        }
+        return best_results
+    
+    def rsi_strategy_optimization(self, all_data, n, oversold, overbought):
+        train_results = []
+        for set_type, df in all_data.items():
+            if "train" in set_type:
+                train_results.append(self.rsi_params_n_tf_optimization(set_type, df, n, oversold, overbought))
+        
+        optimal_tf_df = pd.DataFrame(train_results)
+        return optimal_tf_df.sort_values(by='Return [%]', ascending=False)
