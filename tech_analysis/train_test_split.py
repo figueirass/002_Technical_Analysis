@@ -1,5 +1,5 @@
 import yfinance as yf
-
+from datetime import datetime, timedelta
 
 class TrainTestSets:
 
@@ -8,18 +8,19 @@ class TrainTestSets:
 
     def train_test_split(self, ticker, interval):
 
+        end = datetime.now()
+
         if interval in ["1m", "5m", "15m", "30m"]:
-            start = "2025-05-31"
-            end = "2025-06-06"
-        elif interval in ["1h", "90m", "4h"]:
-            start = "2025-04-28"
-            end = "2025-06-06"
+            start = end - timedelta(days=6) # 7 días
+        elif interval in ["1h", "4h"]:
+            start = end - timedelta(days=365) # 1 año
         elif interval in ["1d", "5d", "1wk"]:
-            start = "2024-01-01"
-            end = "2025-06-06"
+            start = end - timedelta(days=1095) # 3 años
         elif interval in ["1mo", "3mo"]:
-            start = "2023-01-01"
-            end = "2025-06-06"
+            start = end - timedelta(days=1825) # 5 años
+
+        start = start.strftime("%Y-%m-%d")
+        end = end.strftime("%Y-%m-%d")
             
         data = yf.download(tickers=ticker, start=start, end=end, interval=interval)
         data.columns = data.columns.droplevel(1)
@@ -32,8 +33,8 @@ class TrainTestSets:
     
     def interval_train_test_split(self, ticker, intervals):
         all_data = {}
-        intervals = ["1m", "5m", "15m", "30m", "1h", "90m", "4h", "1d", "5d", "1wk", "1mo", "3mo"]
-        #           ["1m", "5m", "15m", "30m", "1h", "90m", "4h", "1d", "5d", "1wk", "1mo", "3mo", "6mo"]
+        intervals = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "5d", "1wk", "1mo", "3mo"]
+        #           ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "5d", "1wk", "1mo", "3mo", "6mo"]
         for interval in intervals:
             data_from_split = self.train_test_split(ticker, interval)
             all_data[f"{interval}_train"] = data_from_split[0]
